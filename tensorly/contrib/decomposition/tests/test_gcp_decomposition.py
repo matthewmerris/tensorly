@@ -32,6 +32,7 @@ def test_gcp_1():
     rank = 2
     mTen = gcp(tensor, rank, type='normal', state=rng)
     print(mTen)
+    assert(mTen is not None), "gcp returned null"
     assert(len(mTen[1]) == d), "Number of factors should be 3, currently has " + str(len(mTen[1]))
 
     # Check each factor matrices has the correct number of columns
@@ -44,12 +45,12 @@ def test_gcp_1():
 
 
 @skip_if_backend
-# def test_validate_type_1():
-#     """ Test for gcp helper method for setting up loss and gradient function handles """
-#     ## Test 'normal' fh and gh returned
-#     type = 'normal'
-#     fh, gh, lb = validate_type(type)
-#     assert(fh(4,2) == 4), "normal loss function for x = 4 & m =2 should equal 4 not {}".format(fh(4,2))
+def test_validate_type_1():
+    """ Test for gcp helper method for setting up loss and gradient function handles """
+    ## Test 'normal' fh and gh returned
+    type = 'normal'
+    fh, gh, lb = validate_type(type)
+    assert(fh(4,2) == 4), "normal loss function for x = 4 & m =2 should equal 4 not {}".format(fh(4,2))
 
 
 @skip_if_backend

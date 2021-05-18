@@ -141,8 +141,9 @@ def gcp(X, R, type='normal', opt='lbfgsb', mask=None, maxiters=1000, \
     nnonnzeros = 0
     X = tl.tensor_to_vec(X)
     for i in X:
-        if i > 0: nnonnzeros += 1
-    X = tl.reshape(X,sz)
+        if i > 0:
+            nnonnzeros += 1
+    X = tl.reshape(X, sz)
     nzeros = tsz - nnonnzeros
     nmissing = 0
     if W is not None:
@@ -152,37 +153,7 @@ def gcp(X, R, type='normal', opt='lbfgsb', mask=None, maxiters=1000, \
         W = tl.reshape(W,sz)
 
     # Set up function, gradient, and bounds
-    # @@@@@@ fh, gh, lb = validate_type(type) # old-way, needs troubleshooting
-    fh = None
-    gh = None
-    lb = None
-    if type == "normal" or type == 'gaussian':
-        fh = lambda x, m: (x - m) ** 2
-        gh = lambda x, m: 2 * (x - m)
-        lb = -math.inf
-    elif type == 'binary' or type == 'bernoulli-odds':
-        fh = lambda x, m: math.log(m + 1) - x * math.log(m + 1e-10)
-        gh = lambda x, m: 1 / (m + 1) - x / (m + 1e-10)
-        lb = 0
-    elif type == 'bernoulli-logit':
-        fh = lambda x, m: math.log(math.exp(m) + 1) - x * m
-        gh = lambda x, m: math.exp(m) / (math.exp(m) + 1) - x
-        lb = -math.inf
-    elif type == 'count' or type == 'poisson':
-        fh = lambda x, m: m - x * math.log(m + 1e-10)
-        gh = lambda x, m: 1 - x / (m + 1e-10)
-        lb = 0
-    elif type == 'poisson-log':
-        fh = lambda x, m: math.exp(m) - x * m
-        gh = lambda x, m: 1 - x / (m + 1e-10)
-        lb = 0
-    elif type == 'rayleigh':
-        fh = lambda x, m: 2 * math.log(m + 1e-10) + (math.pi / 4) * ((x / (m + 1e-10)) ** 2)
-        gh = lambda x, m: 2 / (m + 1e-10) - (math.pi / 2) * (x ** 2) / ((m + 1e-10) ** 3)
-        lb = 0
-    else:
-        print("Type unsupported!!")
-        sys.exit(1)
+    fh, gh, lb = validate_type(type)
 
     # initialize CP-tensor and make a copy to work with so as to have the starting guess
     M0 = initialize_cp(X, R, init=init, random_state=state)
@@ -191,7 +162,7 @@ def gcp(X, R, type='normal', opt='lbfgsb', mask=None, maxiters=1000, \
     for i in range(nd):
         f = tl.copy(M0[1][i])
         fcts0.append(f)
-    M = CPTensor((wghts0,fcts0))
+    M = CPTensor((wghts0, fcts0))
 
     # check optimization method
     if validate_opt(opt):
@@ -249,6 +220,8 @@ def gcp(X, R, type='normal', opt='lbfgsb', mask=None, maxiters=1000, \
         # TODO perform optimization with SGD/ADAM/ADAGRAD, yet to be implemented
         pass
 
+    return Mfin
+
 
 def vec2factors(vec, shape, rank, context = None):
     """Wrapper function detailed in Appendix C [1]
@@ -299,9 +272,9 @@ def factors2vec(factors):
     vec = None
     for factor in factors:
         if vec is None:
-            vec = tl.tensor_to_vec(tl.unfold(factor,1))
+            vec = tl.tensor_to_vec(tl.transpose(factor))
         else:
-            vec = tl.concatenate([vec,tl.tensor_to_vec(tl.unfold(factor,1))])
+            vec = tl.concatenate([vec,tl.tensor_to_vec(tl.transpose(factor))])
     return vec
 
 def validate_type(type):
@@ -355,8 +328,7 @@ def validate_type(type):
         print("Type unsupported!!")
         sys.exit(1)
 
-        return fh, gh, lb
-
+    return fh, gh, lb
 
 def validate_opt(opt):
     """Validate 'opt' method is supported
