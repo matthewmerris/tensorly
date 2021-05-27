@@ -155,6 +155,7 @@ def gcp(X, R, type='normal', opt='lbfgsb', mask=None, maxiters=1000, \
     # Set up function, gradient, and bounds
     fh, gh, lb = validate_type(type)
 
+
     # initialize CP-tensor and make a copy to work with so as to have the starting guess
     M0 = initialize_cp(X, R, init=init, random_state=state)
     wghts0 = tl.copy(M0[0])
@@ -330,6 +331,7 @@ def validate_type(type):
 
     return fh, gh, lb
 
+
 def validate_opt(opt):
     """Validate 'opt' method is supported
 
@@ -410,7 +412,10 @@ def tt_gcp_fg(M, X, f, g, W = None, computeF = True, computeG = True, vectorG = 
     if computeG:
 
         Y = g(Xv,Mv)
-        Y = tl.reshape(Y, tl.shape(X))
+        Y = tl.tensor(tl.reshape(Y, tl.shape(X)))
+
+        # scale intermediate grad, @@@@ NEEDS TO BE SCALED BY SIZE OF PRESENT DATA @@@
+        Y = (1 / X.size) * Y
 
         if W is not None:
             # TODO handle applying weight tensor, probably need to vec it then elementwise product
