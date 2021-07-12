@@ -23,7 +23,7 @@ def test_gcp_1():
     rng = tl.check_random_state(1234)
     d = 3
     n = 4
-    tensor = tl.tensor(rng.random((4, 5, 6)), dtype=tl.float32)
+    tensor = tl.tensor(rng.random((40, 50, 60)), dtype=tl.float32)
     # tensor = (np.arange(n**d, dtype=float).reshape((n,)*d))
     # tensor = tl.tensor(tensor)  # a 4 x 4 x 4 tensor
 
@@ -31,8 +31,8 @@ def test_gcp_1():
 
 
     # Find gcp decomposition of the tensor
-    rank = 2
-    mTen = gcp(tensor, rank, type='normal', state=rng)
+    rank = 20
+    mTen = gcp(tensor, rank, type='normal', state=rng, maxiters=1e5)
     print(mTen)
     assert(mTen is not None), "gcp returned null"
     assert(len(mTen[1]) == d), "Number of factors should be 3, currently has " + str(len(mTen[1]))
@@ -43,8 +43,10 @@ def test_gcp_1():
         assert(columns == rank), "Factor matrix {} needs {} columns, but only has {}".format(i+1, rank, columns)
 
     # Check CPTensor has same number of elements as tensor
-    assert(tensor.size == tl.cp_to_tensor(mTen).size), "Unequal number of tensor elements. Tensor: {} CPTensor: {}".format(tensor.size,tl.cp_to_tensor(mTen).size)
-
+    mTen = tl.cp_to_tensor(mTen)
+    assert(tensor.size == mTen.size), "Unequal number of tensor elements. Tensor: {} CPTensor: {}".format(tensor.size,tl.cp_to_tensor(mTen).size)
+    score = 1 - (tl.norm(tensor - mTen)/tl.norm(tensor))
+    print("Score: {}".format(score))
 
 @skip_if_backend
 def test_validate_type_1():

@@ -302,8 +302,8 @@ def validate_type(type):
     gh = None
     lb = None
     if type == "normal" or type == 'gaussian':
-        fh = lambda x, m: (x - m) ** 2
-        gh = lambda x, m: 2 * (x - m)
+        fh = lambda x, m: (m - x) ** 2
+        gh = lambda x, m: 2 * (m - x)
         lb = -math.inf
     elif type == 'binary' or type == 'bernoulli-odds':
         fh = lambda x, m: math.log(m + 1) - x * math.log(m + 1e-10)
@@ -359,7 +359,7 @@ def validate_opt(opt):
         print("Optimization: " + opt + " not yet implemented.")
         status = 1
     else:
-        print("Optimization method not supported. Choose from: lbfgsb, sgd, ada, adagrad")
+        print("Optimization method not supported. Choose from: lbfgsb, sgd, adam, adagrad")
         status = 1
 
     return status
@@ -413,9 +413,6 @@ def tt_gcp_fg(M, X, f, g, W = None, computeF = True, computeG = True, vectorG = 
 
         Y = g(Xv,Mv)
         Y = tl.tensor(tl.reshape(Y, tl.shape(X)))
-
-        # scale intermediate grad, @@@@ NEEDS TO BE SCALED BY SIZE OF PRESENT DATA @@@
-        Y = (1 / X.size) * Y
 
         if W is not None:
             # TODO handle applying weight tensor, probably need to vec it then elementwise product
